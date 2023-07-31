@@ -1,2 +1,3 @@
 # An-26MTOW-python-kivy
-Calculator for MTOW An-26 25000Kg wind calm
+Calculator for Maximum Take Off Weight An-26 25000Kg wind calm
+Cancel changes
