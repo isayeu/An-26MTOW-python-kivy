@@ -1,0 +1,45 @@
+# opt.kv
+
+#:kivy 2.0.0
+
+<MyBoxLayout>:
+    # Your MyBoxLayout widget kv rules here, if any
+    orientation: "vertical"
+
+    Label:
+        id: label
+        text: "Программа только для ознакомительных целей.\nВерные значения определяются по рисункам\nв изм. №4 к РЛЭ Ан-26"
+        size_hint: (1, 0.5)
+
+    UpperCaseTextInput:
+        id: airport
+        hint_text: "ICAO airport index"
+        multiline: False
+        on_text: root.on_text_change(self, self.text)
+        size_hint: (1, 0.3)
+
+    NumericTextInput:
+        id: temperature
+        hint_text: "TEMPERATURE"
+        size_hint: (1, 0.3)
+
+    NumericTextInput:
+        id: qnh
+        hint_text: "QNH in hPA"
+        size_hint: (1, 0.3)
+
+    Spinner:
+        id: flap_spinner
+        text: 'Flaps 15'
+        values: ('Flaps 15', 'Flaps 5')
+        on_text: root.on_spinner_select(self, self.text)
+        size_hint: (1, 0.3)
+
+    Button:
+        text: 'Calculate'
+        on_press: root.btn_pressed()
+        size_hint: (1, 0.3)
+
+    Label:
+        id: result_label
+        size_hint: (1, 2)
