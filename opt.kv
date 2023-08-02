@@ -9,7 +9,7 @@
     Label:
         id: label
         text: "Программа только для ознакомительных целей.\nВерные значения определяются по рисункам\nв изм. №4 к РЛЭ Ан-26"
-        size_hint: (1, 0.5)
+        size_hint: (1, 0.7)
 
     UpperCaseTextInput:
         id: airport
@@ -17,16 +17,52 @@
         multiline: False
         on_text: root.on_text_change(self, self.text)
         size_hint: (1, 0.3)
+        padding_y: 10
+        valign: 'center'
 
     NumericTextInput:
         id: temperature
         hint_text: "TEMPERATURE"
         size_hint: (1, 0.3)
+        padding_y: 10
+        valign: 'center'
 
     NumericTextInput:
         id: qnh
         hint_text: "QNH in hPA"
+        input_type: 'number'
         size_hint: (1, 0.3)
+        padding_y: 10
+        valign: 'center'
+
+    BoxLayout:
+        size_hint: (1, 0.3)
+        NumericTextInput:
+            id: rw_heading
+            hint_text: "RW heading"
+            input_type: 'number'
+            size_hint: (1, 1)
+            padding_y: 10
+            halign: 'center'
+            valign: 'center'
+
+        NumericTextInput:
+            id: wind_direction
+            hint_text: "Wind direction"
+            input_type: 'number'
+            size_hint: (1, 1)
+            padding_y: 10
+            halign: 'center'
+            valign: 'center'
+
+        NumericTextInput:
+            id: wind_speed
+            hint_text: "Wind speed"
+            input_type: 'number'
+            size_hint: (1, 1)
+            padding_y: 10
+            halign: 'center'
+            valign: 'center'
 
     Spinner:
         id: flap_spinner
@@ -42,4 +78,17 @@
 
     Label:
         id: result_label
+        halign: 'left'
+        valign: 'bottom'
+        padding_x: 10
+        padding_y: 10
         size_hint: (1, 2)
+
+    Label:
+        id: about
+        text: "(c) Исаев Андрей 2023"
+        halign: 'left'
+        valign: 'bottom'
+        padding_x: 10
+        padding_y: 10
+        size_hint: (1, 0.3)

@@ -1,9 +1,13 @@
 import re
+import math
 import sqlite3
+import numpy as np
 from kivy.app import App
 from kivy.lang import Builder
+#from scipy.interpolate import interp1d
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
+
 
 Builder.load_file("opt.kv")
 
@@ -33,6 +37,11 @@ class MyBoxLayout(BoxLayout):
 
     TEMPERATURES_FLAPS15 = [-50, -40, -30, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45]
     TEMPERATURES_FLAPS5 = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30, 35, 40, 45]
+    CALM_FLAPS15 = [17000, 25000]
+    HEADWIND_30_FLAPS15 = [17700, 26069]
+    CALM_FLAPS5 = [18000, 25000]
+    HEADWIND_30_FLAPS5 = [18750, 26041]
+    TAILWIND_5_FLAPS5 = [17750, 24458]
 
 
     def find_temperature_range_flaps(self, temperature, flap_setting):
@@ -75,6 +84,46 @@ class MyBoxLayout(BoxLayout):
             DELTA_hPa = 1013 - QNH
         else:
             DELTA_hPa = 0
+
+        TO_heading_text = self.ids.rw_heading.text
+        if TO_heading_text:
+            TO_heading = int(TO_heading_text)
+        else:
+            TO_heading = 0
+
+        wind_direction_text = self.ids.wind_direction.text
+        if wind_direction_text:
+            wind_direction = int(wind_direction_text)
+        else:
+            wind_direction = 0
+
+        wind_speed_text = self.ids.wind_speed.text
+        if wind_speed_text:
+            wind_speed = int(wind_speed_text)
+        else:
+            wind_speed = 0
+
+        # Calculate the relative wind angle
+        wind_angle = (wind_direction - TO_heading) % 360
+
+        # Determine if it's headwind or tailwind
+        if wind_angle <= 180:
+            if wind_angle <= 89:
+                wind_type = "Headwind"
+            else:
+                wind_type = "Tailwind"
+                wind_angle = 180 - wind_angle
+        else:
+            if wind_angle >= 271:
+                wind_type = "Headwind"
+                wind_angle = 360 - wind_angle
+            else:
+                wind_type = "Tailwind"
+                wind_angle = wind_angle - 180
+
+        wind_angle_radians = math.radians(wind_angle)
+        headwind_component = wind_speed * math.cos(wind_angle_radians)
+        print(f"{wind_type}: {wind_angle} состовляющая продольная: {headwind_component}")
 
         APT_ID = self.ids.airport.text
         query = "SELECT * FROM airports WHERE ICAO = ?"
@@ -135,14 +184,37 @@ class MyBoxLayout(BoxLayout):
         DELTA_T_MEASURED = TEMPERATURE - TEMPERATURES[lower_temp_index]
         DELTA_T_SCALE = TEMPERATURES[upper_temp_index] - TEMPERATURES[lower_temp_index]
         TEMPERATURE_FACTOR = ((MTOW_LOW_TEMPT - MTOW_UPPER_TEMPT) / DELTA_T_SCALE) * DELTA_T_MEASURED
-        MTOW = MTOW_LOW_TEMPT - TEMPERATURE_FACTOR
+        CALM_MTOW = MTOW_LOW_TEMPT - TEMPERATURE_FACTOR
         print(f"высота {PRESSURE_ALTITUDE}, диапазон: {lower} - {upper},\nТемература: {TEMPERATURE}")
         print(f"{MTOW_LOWER[lower_temp_index + 1]} - {MTOW_LOWER[upper_temp_index + 1]}")
-        print(f"MTOW по фактической высоте: {MTOW_LOW_TEMPT} - {MTOW_UPPER_TEMPT}")
+        print(f"CALM_MTOW по фактической высоте: {MTOW_LOW_TEMPT} - {MTOW_UPPER_TEMPT}")
         print(f"{MTOW_UPPER[lower_temp_index +1]} - {MTOW_UPPER[upper_temp_index +1]}")
-        print(f"MTOW: {MTOW}")
+        print(f"CALM_MTOW: {CALM_MTOW}")
 
-        INFO_FINAL = f"{INFO} MTOW:{int(MTOW)}"
+        if flap_setting == 'Flaps 15':
+            if wind_type == 'Headwind':
+                HEADWIND_30_FLAPS15_MTOW = np.interp(CALM_MTOW, self.CALM_FLAPS15, self.HEADWIND_30_FLAPS15)
+                print(HEADWIND_30_FLAPS15_MTOW)
+                WIND_FACTOR = ((HEADWIND_30_FLAPS15_MTOW - CALM_MTOW) / 30) * headwind_component
+                MTOW = CALM_MTOW + WIND_FACTOR
+            else:
+                WIND_FACTOR = 100 * headwind_component
+                MTOW = CALM_MTOW - WIND_FACTOR
+        else:
+            if wind_type == 'Headwind':
+                HEADWIND_30_FLAPS5_MTOW = np.interp(CALM_MTOW, self.CALM_FLAPS5, self.HEADWIND_30_FLAPS5)
+                WIND_FACTOR = ((HEADWIND_30_FLAPS5_MTOW - CALM_MTOW) / 30) * headwind_component
+                MTOW = CALM_MTOW + WIND_FACTOR
+            else:
+                TAILWIND_5_FLAPS5_MTOW = np.interp(CALM_MTOW, self.CALM_FLAPS5, self.TAILWIND_5_FLAPS5)
+                WIND_FACTOR = ((CALM_MTOW - TAILWIND_5_FLAPS5_MTOW) / 5) * headwind_component
+                MTOW = CALM_MTOW - WIND_FACTOR
+
+
+        if MTOW > 25000:
+            MTOW = 25000
+
+        INFO_FINAL = f"{INFO}\n{wind_type}: {round(headwind_component, 2)}\nMTOW:{int(MTOW)}"
         self.ids.label.text = INFO_FINAL
 
     def on_spinner_select(self, spinner, text):
