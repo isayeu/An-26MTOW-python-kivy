@@ -9,11 +9,16 @@ requirements = python3,Cython==0.29.36,kivy,numpy
 #requirements = python3,Cython==3.0.0,kivy
 python_version = 3.8
 cython.language_level = 3
-version = 2.0.2
+version = 2.9.4
+# Release signing configuration
+android.p4a_release_keyalias = andrei
+android.p4a_release_keystore = my-release-key.keystore
+android.p4a_release_keystore_pass = my_keystore_vfcnth
+android.p4a_release_keyalias_pass = my_keyalias_vfcnth
 #__version__ = "0.1.2"
 #requirements.source.kivy = ~/kivy-android/kivy
 orientation = portrait
-fullscreen = 1
+fullscreen = 0
 # (int) Target Android API, should be as high as possible.
 android.api = 30
 android.minapi = 21
